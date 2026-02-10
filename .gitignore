@@ -1,9 +1,16 @@
 # Node modules
 node_modules/
 
+# Ignore node_modules in any subpackage/workspace folder
+**/node_modules/
+packages/**/node_modules/
+apps/**/node_modules/
+
 # Environment files
 .env
 .env.*
+**/.env
+**/.env.*
 
 # Logs
 logs
