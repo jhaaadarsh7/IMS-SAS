@@ -1,0 +1,11 @@
+{
+  "name": "@ims/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig/base": "./tsconfig/base.json",
+    "./eslint/base": "./eslint/base.cjs",
+    "./prettier/base": "./prettier/base.cjs"
+  }
+}
