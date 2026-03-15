@@ -1,21 +1,45 @@
 import { Worker } from "bullmq";
 import { optimizeBudget, simpleExponentialSmoothing } from "@ims/algorithms";
+import { prisma } from "@ims/db";
+import { Prisma } from "@ims/db";
 
 const connection = {
-  host: "localhost",
-  port: 6379,
+  host: process.env.REDIS_HOST || "localhost",
+  port: Number(process.env.REDIS_PORT || 6379),
   maxRetriesPerRequest: null
 };
 
 const forecastingWorker = new Worker(
   "forecasting",
   async (job) => {
-    const { history, alpha, periods } = job.data as {
+    const { productId, branchId, history, alpha, periods } = job.data as {
+      productId: string;
+      branchId?: string;
       history: number[];
       alpha?: number;
       periods?: number;
     };
+
     const result = simpleExponentialSmoothing({ history, alpha, periods });
+
+    // Forecasted qty = sum of next period values
+    const forecastQty = result.next.reduce((sum, val) => sum + val, 0);
+    const horizonDays = (periods ?? 1) * 7;
+
+    // Persist result to DB when productId is provided
+    if (productId) {
+      await prisma.forecast.create({
+        data: {
+          productId,
+          branchId: branchId ?? null,
+          model: "SES",
+          horizonDays,
+          forecastQty: new Prisma.Decimal(forecastQty.toFixed(2)),
+          confidence: null
+        }
+      });
+    }
+
     return result;
   },
   { connection }

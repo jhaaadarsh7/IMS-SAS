@@ -1,5 +1,15 @@
 import { Prisma, prisma } from "@ims/db";
+import { simpleExponentialSmoothing } from "@ims/algorithms";
 import { Queue } from "bullmq";
+
+export interface ComputeForecastInput {
+  productId: string;
+  branchId?: string;
+  horizonDays: number;
+  alpha?: number;
+  fromDate?: Date;
+  toDate?: Date;
+}
 
 export interface CreateForecastInput {
   productId: string;
@@ -178,4 +188,83 @@ export class ForecastService {
       status: "queued"
     };
   }
+
+  /**
+   * Synchronous SES forecast:
+   * 1. Derives weekly demand history from stock ledger (SALE_OUT_BRANCH events)
+   * 2. Runs Simple Exponential Smoothing
+   * 3. Persists result into Forecast table
+   * 4. Returns SES output + saved forecast record
+   */
+  async computeAndSave(input: ComputeForecastInput) {
+    // Derive demand history from ledger grouped by week
+    const ledgerRows = await prisma.stockLedger.findMany({
+      where: {
+        productId: input.productId,
+        branchId: input.branchId,
+        eventType: "SALE_OUT_BRANCH",
+        createdAt:
+          input.fromDate || input.toDate
+            ? { gte: input.fromDate, lte: input.toDate }
+            : undefined
+      },
+      orderBy: { createdAt: "asc" },
+      select: { quantityDelta: true, createdAt: true }
+    });
+
+    if (ledgerRows.length === 0) {
+      throw new Error("No sales history found for this product/branch in the given period");
+    }
+
+    // Bucket into weekly demand bins
+    const weekMap = new Map<string, number>();
+    for (const row of ledgerRows) {
+      const weekStart = getWeekStart(row.createdAt);
+      const key = weekStart.toISOString();
+      weekMap.set(key, (weekMap.get(key) ?? 0) + Math.abs(row.quantityDelta));
+    }
+
+    const history = Array.from(weekMap.values());
+
+    // Run SES
+    const periods = Math.ceil(input.horizonDays / 7); // convert horizon days → weeks
+    const alpha = input.alpha ?? 0.3;
+    const sesResult = simpleExponentialSmoothing({ history, alpha, periods });
+
+    // Forecasted quantity = sum of next n periods
+    const forecastQty = sesResult.next.reduce((sum, val) => sum + val, 0);
+
+    // Persist forecast
+    const saved = await prisma.forecast.create({
+      data: {
+        productId: input.productId,
+        branchId: input.branchId,
+        model: "SES",
+        horizonDays: input.horizonDays,
+        forecastQty: new Prisma.Decimal(forecastQty.toFixed(2)),
+        confidence: null
+      }
+    });
+
+    return {
+      forecast: toForecastDto(saved),
+      ses: {
+        alpha,
+        historyWeeks: history.length,
+        history,
+        fitted: sesResult.fitted,
+        next: sesResult.next,
+        lastLevel: sesResult.lastLevel,
+        forecastQtyTotal: forecastQty
+      }
+    };
+  }
+}
+
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }

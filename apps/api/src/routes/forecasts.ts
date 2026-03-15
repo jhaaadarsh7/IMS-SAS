@@ -28,6 +28,15 @@ const updateSchema = z
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
 
+const computeSchema = z.object({
+  productId: z.string().min(1),
+  branchId: z.string().min(1).optional(),
+  horizonDays: z.coerce.number().int().positive(),
+  alpha: z.coerce.number().gt(0).lt(1).optional(),
+  fromDate: z.coerce.date().optional(),
+  toDate: z.coerce.date().optional()
+});
+
 const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -126,6 +135,21 @@ export async function forecastRoutes(app: FastifyInstance) {
         return reply.status(202).send(result);
       } catch (error) {
         return reply.status(400).send({ message: error instanceof Error ? error.message : "Failed to queue forecast job" });
+      }
+    }
+  );
+
+  // Synchronous SES endpoint: auto-derives demand history from ledger, runs SES, persists result
+  app.post(
+    "/forecasts/compute",
+    { preHandler: [authenticateRequest, requirePermission(Permission.FORECAST_RUN, { branchIdFrom: "body" })] },
+    async (request, reply) => {
+      try {
+        const body = computeSchema.parse(request.body);
+        const result = await service.computeAndSave(body);
+        return reply.status(201).send(result);
+      } catch (error) {
+        return reply.status(400).send({ message: error instanceof Error ? error.message : "Failed to compute forecast" });
       }
     }
   );
