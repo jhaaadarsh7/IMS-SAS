@@ -15,6 +15,7 @@ model User {
   branchIds     String[]  @default([])
   isActive      Boolean   @default(true)
   refreshToken  String?   @db.Text
+  createdRequests BranchProductRequest[] @relation("CreatedProductRequests")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -48,6 +49,7 @@ model Branch {
   stockLedger StockLedger[]
   forecasts   Forecast[]
   abcClasses  ABCClass[]
+  productRequests BranchProductRequest[]
 }
 
 model Product {
@@ -61,6 +63,26 @@ model Product {
   stockLedger StockLedger[]
   forecasts   Forecast[]
   abcClasses  ABCClass[]
+  productRequests BranchProductRequest[]
+}
+
+model BranchProductRequest {
+  id              String               @id @default(cuid())
+  branchId        String
+  branch          Branch               @relation(fields: [branchId], references: [id])
+  productId       String
+  product         Product              @relation(fields: [productId], references: [id])
+  requestedQty    Int
+  status          ProductRequestStatus @default(PENDING)
+  notes           String?
+  createdByUserId String
+  createdByUser   User                 @relation("CreatedProductRequests", fields: [createdByUserId], references: [id])
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([branchId, status, createdAt])
+  @@index([productId, status, createdAt])
+  @@index([createdByUserId, createdAt])
 }
 
 model StockLedger {
@@ -126,4 +148,11 @@ enum ABCRank {
   A
   B
   C
+}
+
+enum ProductRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FULFILLED
 }

@@ -14,6 +14,9 @@ export enum Permission {
   TRANSFER_CREATE = "TRANSFER_CREATE",
   SALE_CREATE = "SALE_CREATE",
   STOCK_ADJUST = "STOCK_ADJUST",
+  REQUEST_CREATE = "REQUEST_CREATE",
+  REQUEST_READ = "REQUEST_READ",
+  REQUEST_UPDATE = "REQUEST_UPDATE",
   FORECAST_RUN = "FORECAST_RUN",
   OPTIMIZER_RUN = "OPTIMIZER_RUN",
   DASHBOARD_VIEW = "DASHBOARD_VIEW"
@@ -29,9 +32,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   [Role.SUPER_ADMIN]: Object.values(Permission),
   [Role.HQ_MANAGER]: [
     Permission.PRODUCT_READ,
-    Permission.PRODUCT_WRITE,
     Permission.PURCHASE_CREATE,
     Permission.TRANSFER_CREATE,
+    Permission.REQUEST_READ,
+    Permission.REQUEST_UPDATE,
     Permission.FORECAST_RUN,
     Permission.OPTIMIZER_RUN,
     Permission.DASHBOARD_VIEW
@@ -48,7 +52,14 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.STOCK_ADJUST,
     Permission.TRANSFER_CREATE
   ],
-  [Role.SALES_USER]: [Permission.PRODUCT_READ, Permission.SALE_CREATE, Permission.DASHBOARD_VIEW],
+  [Role.SALES_USER]: [
+    Permission.PRODUCT_READ,
+    Permission.PRODUCT_WRITE,
+    Permission.SALE_CREATE,
+    Permission.REQUEST_CREATE,
+    Permission.REQUEST_READ,
+    Permission.DASHBOARD_VIEW
+  ],
   [Role.VIEWER]: [Permission.PRODUCT_READ, Permission.DASHBOARD_VIEW]
 };
 

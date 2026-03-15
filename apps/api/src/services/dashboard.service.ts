@@ -49,6 +49,11 @@ export class DashboardService {
       })
     ]);
 
+    const serializedMovements = recentMovements.map((movement) => ({
+      ...movement,
+      id: movement.id.toString()
+    }));
+
     return {
       totals: {
         totalProducts,
@@ -60,7 +65,7 @@ export class DashboardService {
         class: item.class,
         count: item._count._all
       })),
-      recentMovements
+      recentMovements: serializedMovements
     };
   }
 }

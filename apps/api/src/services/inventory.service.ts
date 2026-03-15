@@ -49,9 +49,16 @@ export interface StockSnapshotInput {
   branchId?: string;
 }
 
+function serializeLedgerRecord<T extends { id: bigint }>(item: T) {
+  return {
+    ...item,
+    id: item.id.toString()
+  };
+}
+
 export class InventoryService {
   async recordPurchase(input: RecordPurchaseInput) {
-    return prisma.stockLedger.create({
+    const created = await prisma.stockLedger.create({
       data: {
         eventType: LedgerEventType.PURCHASE_IN,
         quantityDelta: input.quantity,
@@ -66,10 +73,12 @@ export class InventoryService {
         branch: true
       }
     });
+
+    return serializeLedgerRecord(created);
   }
 
   async recordSale(input: RecordSaleInput) {
-    return prisma.stockLedger.create({
+    const created = await prisma.stockLedger.create({
       data: {
         eventType: LedgerEventType.SALE_OUT_BRANCH,
         quantityDelta: -Math.abs(input.quantity),
@@ -84,6 +93,8 @@ export class InventoryService {
         branch: true
       }
     });
+
+    return serializeLedgerRecord(created);
   }
 
   async recordAdjustment(input: RecordAdjustmentInput) {
@@ -93,7 +104,7 @@ export class InventoryService {
 
     const eventType = input.quantityDelta >= 0 ? LedgerEventType.ADJUSTMENT_POSITIVE : LedgerEventType.ADJUSTMENT_NEGATIVE;
 
-    return prisma.stockLedger.create({
+    const created = await prisma.stockLedger.create({
       data: {
         eventType,
         quantityDelta: input.quantityDelta,
@@ -109,6 +120,8 @@ export class InventoryService {
         branch: true
       }
     });
+
+    return serializeLedgerRecord(created);
   }
 
   async transferWarehouseToBranch(input: WarehouseToBranchTransferInput) {
@@ -135,7 +148,10 @@ export class InventoryService {
         }
       });
 
-      return { outLedger, inLedger };
+      return {
+        outLedger: serializeLedgerRecord(outLedger),
+        inLedger: serializeLedgerRecord(inLedger)
+      };
     });
   }
 
@@ -163,7 +179,7 @@ export class InventoryService {
     ]);
 
     return {
-      items,
+      items: items.map(serializeLedgerRecord),
       pagination: {
         page: input.page,
         limit: input.limit,

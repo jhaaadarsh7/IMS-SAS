@@ -1,4 +1,4 @@
-import { Permission } from "@ims/rbac";
+import { Permission, Role } from "@ims/rbac";
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { authenticateRequest } from "../middleware/auth";
@@ -22,6 +22,14 @@ export async function dashboardRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         const query = summaryQuerySchema.parse(request.query);
+        if (request.user?.role === Role.SALES_USER) {
+          if (query.warehouseId) {
+            return reply.status(403).send({ message: "Forbidden" });
+          }
+
+          query.branchId = query.branchId ?? request.user.branchIds?.[0];
+        }
+
         const result = await service.getSummary(query);
         return reply.status(200).send(result);
       } catch (error) {

@@ -1,5 +1,5 @@
 import { LedgerEventType } from "@ims/db";
-import { Permission } from "@ims/rbac";
+import { Permission, Role } from "@ims/rbac";
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { authenticateRequest } from "../middleware/auth";
@@ -120,6 +120,14 @@ export async function inventoryRoutes(app: FastifyInstance) {
     async (request, reply) => {
     try {
       const query = ledgerQuerySchema.parse(request.query);
+      if (request.user?.role === Role.SALES_USER) {
+        if (query.warehouseId) {
+          return reply.status(403).send({ message: "Forbidden" });
+        }
+
+        query.branchId = query.branchId ?? request.user.branchIds?.[0];
+      }
+
       const result = await service.listLedger(query);
       return reply.status(200).send(result);
     } catch (error) {
@@ -133,6 +141,14 @@ export async function inventoryRoutes(app: FastifyInstance) {
     async (request, reply) => {
     try {
       const query = stockQuerySchema.parse(request.query);
+      if (request.user?.role === Role.SALES_USER) {
+        if (query.warehouseId) {
+          return reply.status(403).send({ message: "Forbidden" });
+        }
+
+        query.branchId = query.branchId ?? request.user.branchIds?.[0];
+      }
+
       const result = await service.stockSnapshot(query);
       return reply.status(200).send(result);
     } catch (error) {
