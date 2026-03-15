@@ -12,8 +12,13 @@
   },
   "dependencies": {
     "@ims/algorithms": "0.1.0",
+    "@ims/db": "0.1.0",
+    "@ims/rbac": "0.1.0",
     "@ims/types": "0.1.0",
+    "@fastify/cors": "^11.1.0",
+    "bullmq": "^5.58.5",
     "fastify": "^5.1.0",
+    "ioredis": "^5.4.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {

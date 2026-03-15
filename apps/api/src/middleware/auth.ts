@@ -1,7 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { JwtPayload, verifyAccessToken } from "../plugins/jwt";
-import { promises } from "dns";
-
 
 declare module "fastify" {
     export interface FastifyRequest {
