@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import { Permission } from "@ims/rbac";
 import { optimizeBudget } from "@ims/algorithms";
 import { optimizeBudgetRequestSchema } from "@ims/types";
+import { abcRoutes } from "./routes/abc";
 import { authRoutes } from "./routes/auth";
 import { branchRoutes } from "./routes/branches";
 import { dashboardRoutes } from "./routes/dashboard";
@@ -28,6 +29,7 @@ app.get("/health", async () => ({ status: "ok" }));
 
 // Register auth routes
 app.register(authRoutes);
+app.register(abcRoutes);
 app.register(productRoutes);
 app.register(warehouseRoutes);
 app.register(branchRoutes);
