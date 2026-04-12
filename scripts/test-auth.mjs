@@ -1,6 +1,9 @@
 /**
  * Auth endpoint smoke test
  * Run: node scripts/test-auth.mjs
+ *
+ * Registration returns 403 unless the API has ALLOW_PUBLIC_REGISTRATION=true.
+ * Example: ALLOW_PUBLIC_REGISTRATION=true node scripts/test-auth.mjs
  */
 
 const API = "http://localhost:4000";
@@ -28,6 +31,9 @@ let regRes = await fetch(`${API}/auth/register`, {
   })
 });
 const regData = await pretty("POST /auth/register", regRes);
+if (regRes.status === 403) {
+  console.log("\n(Register skipped: set ALLOW_PUBLIC_REGISTRATION=true to test registration.)\n");
+}
 
 // 2. Login
 let loginRes = await fetch(`${API}/auth/login`, {

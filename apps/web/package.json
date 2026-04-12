@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
@@ -11,10 +12,14 @@
   },
   "dependencies": {
     "@ims/algorithms": "0.1.0",
+    "@ims/rbac": "0.1.0",
     "@ims/ui": "0.1.0",
+    "@tailwindcss/postcss": "^4.2.2",
     "next": "15.1.4",
+    "postcss": "^8.4.31",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

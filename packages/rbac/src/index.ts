@@ -72,3 +72,8 @@ export function can(user: UserContext, permission: Permission, branchId?: string
 
   return (user.branchIds ?? []).includes(branchId);
 }
+
+/** All permissions granted to a role (for UI hints; enforce on the API). */
+export function permissionsForRole(role: Role): Permission[] {
+  return [...(ROLE_PERMISSIONS[role] ?? [])];
+}

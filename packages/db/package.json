@@ -12,12 +12,14 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
+    "seed:admin": "node prisma/seed-admin.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
+    "bcryptjs": "^3.0.3",
     "prisma": "^5.22.0",
     "typescript": "^5.6.3"
   }

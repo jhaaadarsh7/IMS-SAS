@@ -24,6 +24,11 @@ export async function authRoutes(app: FastifyInstance) {
   const authService = new AuthService();
 
   app.post("/auth/register", async (request, reply) => {
+    if (process.env.ALLOW_PUBLIC_REGISTRATION !== "true") {
+      return reply.status(403).send({
+        message: "Public registration is disabled. Ask an administrator to create your account."
+      });
+    }
     try {
       const body = registerSchema.parse(request.body);
       const result = await authService.register(body);
@@ -36,9 +41,15 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/login", async (request, reply) => {
+    const parsed = loginSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        message: "Invalid email or password payload",
+        errors: parsed.error.flatten()
+      });
+    }
     try {
-      const body = loginSchema.parse(request.body);
-      const result = await authService.login(body);
+      const result = await authService.login(parsed.data);
       return reply.status(200).send(result);
     } catch (error) {
       return reply.status(401).send({
