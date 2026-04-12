@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import { sessionPermissions } from "@/lib/rbac-ui";
 import { Sidebar } from "@/components/ui/sidebar";
 import { LogoutButton } from "@/components/logout-button";
 
@@ -10,9 +11,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login?next=/dashboard");
   }
 
+  const permissions = sessionPermissions(user);
+
   return (
     <div className="min-h-screen flex">
-      <Sidebar />
+      <Sidebar permissions={permissions} />
       <div className="flex-1 ml-[260px] flex flex-col min-h-screen">
         {/* Top bar */}
         <header className="h-16 border-b border-white/[0.06] bg-[#0d1117]/60 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-end px-6 gap-4">

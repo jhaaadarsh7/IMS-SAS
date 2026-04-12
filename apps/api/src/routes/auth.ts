@@ -1,18 +1,26 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
+import type { UserRole } from "@ims/db";
 import { AuthService } from "../services/auth.service";
 import { authenticateRequest } from "../middleware/auth";
 
+const emailField = z
+  .string()
+  .trim()
+  .min(1, "Email is required")
+  .email()
+  .transform((s) => s.toLowerCase());
+
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string().min(6),
   name: z.string().min(2),
-  role: z.enum(["SUPER_ADMIN", "HQ_MANAGER", "BRANCH_MANAGER", "INVENTORY_CLERK", "SALES_USER", "VIEWER"]),
+  role: z.enum(["ADMIN", "STAFF"]),
   branchIds: z.array(z.string()).optional()
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string()
 });
 
@@ -31,7 +39,10 @@ export async function authRoutes(app: FastifyInstance) {
     }
     try {
       const body = registerSchema.parse(request.body);
-      const result = await authService.register(body);
+      const result = await authService.register({
+        ...body,
+        role: body.role as UserRole
+      });
       return reply.status(201).send(result);
     } catch (error) {
       return reply.status(400).send({

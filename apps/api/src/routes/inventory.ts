@@ -94,6 +94,14 @@ export async function inventoryRoutes(app: FastifyInstance) {
     async (request, reply) => {
     try {
       const body = adjustmentSchema.parse(request.body);
+      if (request.user?.role === Role.STAFF) {
+        if (body.warehouseId) {
+          return reply.status(403).send({ message: "Staff users may only post adjustments for their branch" });
+        }
+        if (!body.branchId || !(request.user.branchIds ?? []).includes(body.branchId)) {
+          return reply.status(403).send({ message: "Forbidden" });
+        }
+      }
       const result = await service.recordAdjustment(body);
       return reply.status(201).send(result);
     } catch (error) {
@@ -116,11 +124,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
 
   app.get(
     "/inventory/ledger",
-    { preHandler: [authenticateRequest, requirePermission(Permission.DASHBOARD_VIEW, { branchIdFrom: "query" })] },
+    { preHandler: [authenticateRequest, requirePermission(Permission.LEDGER_VIEW, { branchIdFrom: "query" })] },
     async (request, reply) => {
     try {
       const query = ledgerQuerySchema.parse(request.query);
-      if (request.user?.role === Role.SALES_USER) {
+      if (request.user?.role === Role.STAFF) {
         if (query.warehouseId) {
           return reply.status(403).send({ message: "Forbidden" });
         }
@@ -137,11 +145,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
 
   app.get(
     "/inventory/stock",
-    { preHandler: [authenticateRequest, requirePermission(Permission.DASHBOARD_VIEW, { branchIdFrom: "query" })] },
+    { preHandler: [authenticateRequest, requirePermission(Permission.LEDGER_VIEW, { branchIdFrom: "query" })] },
     async (request, reply) => {
     try {
       const query = stockQuerySchema.parse(request.query);
-      if (request.user?.role === Role.SALES_USER) {
+      if (request.user?.role === Role.STAFF) {
         if (query.warehouseId) {
           return reply.status(403).send({ message: "Forbidden" });
         }

@@ -122,6 +122,7 @@ export interface DashboardSummary {
 export interface BranchProductRequest {
   id: string;
   branchId: string;
+  warehouseId: string | null;
   productId: string;
   requestedQty: number;
   status: string;
@@ -130,6 +131,7 @@ export interface BranchProductRequest {
   createdAt: string;
   updatedAt: string;
   branch: { id: string; code: string; name: string };
+  warehouse: { id: string; code: string; name: string } | null;
   product: { id: string; sku: string; name: string };
 }
 

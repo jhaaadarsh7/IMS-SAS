@@ -22,7 +22,7 @@ export async function dashboardRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         const query = summaryQuerySchema.parse(request.query);
-        if (request.user?.role === Role.SALES_USER) {
+        if (request.user?.role === Role.STAFF) {
           if (query.warehouseId) {
             return reply.status(403).send({ message: "Forbidden" });
           }

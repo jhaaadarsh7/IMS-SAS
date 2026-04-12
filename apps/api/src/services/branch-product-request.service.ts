@@ -2,6 +2,7 @@ import { Prisma, ProductRequestStatus, prisma } from "@ims/db";
 
 export interface CreateBranchProductRequestInput {
   branchId: string;
+  warehouseId?: string;
   productId: string;
   requestedQty: number;
   notes?: string;
@@ -25,6 +26,7 @@ export interface UpdateBranchProductRequestStatusInput {
 function toDto(request: Prisma.BranchProductRequestGetPayload<{
   include: {
     branch: { select: { id: true; code: true; name: true } };
+    warehouse: { select: { id: true; code: true; name: true } };
     product: { select: { id: true; sku: true; name: true } };
     createdByUser: { select: { id: true; name: true; email: true; role: true } };
   };
@@ -37,6 +39,7 @@ export class BranchProductRequestService {
     const created = await prisma.branchProductRequest.create({
       data: {
         branchId: input.branchId,
+        warehouseId: input.warehouseId ?? null,
         productId: input.productId,
         requestedQty: input.requestedQty,
         notes: input.notes,
@@ -44,6 +47,7 @@ export class BranchProductRequestService {
       },
       include: {
         branch: { select: { id: true, code: true, name: true } },
+        warehouse: { select: { id: true, code: true, name: true } },
         product: { select: { id: true, sku: true, name: true } },
         createdByUser: { select: { id: true, name: true, email: true, role: true } }
       }
@@ -54,9 +58,9 @@ export class BranchProductRequestService {
 
   async list(input: ListBranchProductRequestInput) {
     const where: Prisma.BranchProductRequestWhereInput = {
-      branchId: input.branchId,
-      productId: input.productId,
-      status: input.status,
+      ...(input.branchId ? { branchId: input.branchId } : {}),
+      ...(input.productId ? { productId: input.productId } : {}),
+      ...(input.status ? { status: input.status } : {}),
       ...(input.allowedBranchIds?.length && !input.branchId
         ? { branchId: { in: input.allowedBranchIds } }
         : {})
@@ -67,6 +71,7 @@ export class BranchProductRequestService {
         where,
         include: {
           branch: { select: { id: true, code: true, name: true } },
+          warehouse: { select: { id: true, code: true, name: true } },
           product: { select: { id: true, sku: true, name: true } },
           createdByUser: { select: { id: true, name: true, email: true, role: true } }
         },
@@ -93,6 +98,7 @@ export class BranchProductRequestService {
       where: { id },
       include: {
         branch: { select: { id: true, code: true, name: true } },
+        warehouse: { select: { id: true, code: true, name: true } },
         product: { select: { id: true, sku: true, name: true } },
         createdByUser: { select: { id: true, name: true, email: true, role: true } }
       }
@@ -115,6 +121,7 @@ export class BranchProductRequestService {
         },
         include: {
           branch: { select: { id: true, code: true, name: true } },
+          warehouse: { select: { id: true, code: true, name: true } },
           product: { select: { id: true, sku: true, name: true } },
           createdByUser: { select: { id: true, name: true, email: true, role: true } }
         }

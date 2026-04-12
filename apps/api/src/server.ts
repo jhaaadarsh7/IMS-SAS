@@ -12,6 +12,7 @@ import { forecastRoutes } from "./routes/forecasts";
 import { inventoryRoutes } from "./routes/inventory";
 import { productRoutes } from "./routes/products";
 import { warehouseRoutes } from "./routes/warehouses";
+import { userRoutes } from "./routes/users";
 import { authenticateRequest } from "./middleware/auth";
 import { requirePermission } from "./middleware/permissions";
 import { registerErrorHandler } from "./plugins/error-handler";
@@ -38,6 +39,7 @@ app.register(branchProductRequestRoutes);
 app.register(inventoryRoutes);
 app.register(forecastRoutes);
 app.register(dashboardRoutes);
+app.register(userRoutes);
 
 // Protected optimizer endpoint
 app.post(

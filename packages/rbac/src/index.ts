@@ -1,10 +1,6 @@
 export enum Role {
-  SUPER_ADMIN = "SUPER_ADMIN",
-  HQ_MANAGER = "HQ_MANAGER",
-  BRANCH_MANAGER = "BRANCH_MANAGER",
-  INVENTORY_CLERK = "INVENTORY_CLERK",
-  SALES_USER = "SALES_USER",
-  VIEWER = "VIEWER"
+  ADMIN = "ADMIN",
+  STAFF = "STAFF"
 }
 
 export enum Permission {
@@ -19,7 +15,10 @@ export enum Permission {
   REQUEST_UPDATE = "REQUEST_UPDATE",
   FORECAST_RUN = "FORECAST_RUN",
   OPTIMIZER_RUN = "OPTIMIZER_RUN",
-  DASHBOARD_VIEW = "DASHBOARD_VIEW"
+  DASHBOARD_VIEW = "DASHBOARD_VIEW",
+  LEDGER_VIEW = "LEDGER_VIEW",
+  USER_READ = "USER_READ",
+  USER_WRITE = "USER_WRITE"
 }
 
 export interface UserContext {
@@ -29,38 +28,15 @@ export interface UserContext {
 }
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  [Role.SUPER_ADMIN]: Object.values(Permission),
-  [Role.HQ_MANAGER]: [
-    Permission.PRODUCT_READ,
-    Permission.PURCHASE_CREATE,
-    Permission.TRANSFER_CREATE,
-    Permission.REQUEST_READ,
-    Permission.REQUEST_UPDATE,
-    Permission.FORECAST_RUN,
-    Permission.OPTIMIZER_RUN,
-    Permission.DASHBOARD_VIEW
-  ],
-  [Role.BRANCH_MANAGER]: [
+  [Role.ADMIN]: Object.values(Permission),
+  [Role.STAFF]: [
     Permission.PRODUCT_READ,
     Permission.SALE_CREATE,
     Permission.STOCK_ADJUST,
-    Permission.TRANSFER_CREATE,
-    Permission.DASHBOARD_VIEW
-  ],
-  [Role.INVENTORY_CLERK]: [
-    Permission.PRODUCT_READ,
-    Permission.STOCK_ADJUST,
-    Permission.TRANSFER_CREATE
-  ],
-  [Role.SALES_USER]: [
-    Permission.PRODUCT_READ,
-    Permission.PRODUCT_WRITE,
-    Permission.SALE_CREATE,
     Permission.REQUEST_CREATE,
     Permission.REQUEST_READ,
-    Permission.DASHBOARD_VIEW
-  ],
-  [Role.VIEWER]: [Permission.PRODUCT_READ, Permission.DASHBOARD_VIEW]
+    Permission.LEDGER_VIEW
+  ]
 };
 
 export function can(user: UserContext, permission: Permission, branchId?: string): boolean {
@@ -68,7 +44,7 @@ export function can(user: UserContext, permission: Permission, branchId?: string
   if (!allowedPermissions.includes(permission)) return false;
 
   if (!branchId) return true;
-  if (user.role === Role.SUPER_ADMIN || user.role === Role.HQ_MANAGER) return true;
+  if (user.role === Role.ADMIN) return true;
 
   return (user.branchIds ?? []).includes(branchId);
 }

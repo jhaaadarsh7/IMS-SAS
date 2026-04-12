@@ -1,10 +1,10 @@
 import { can, Permission, permissionsForRole, Role, type UserContext } from "@ims/rbac";
-import type { SessionUser } from "@/lib/auth/session";
+import type { SessionUser } from "@/lib/auth/session-user";
 
 function parseRole(role: string): Role {
   const values = Object.values(Role) as string[];
   if (values.includes(role)) return role as Role;
-  return Role.VIEWER;
+  return Role.STAFF;
 }
 
 export function sessionToContext(user: SessionUser): UserContext {

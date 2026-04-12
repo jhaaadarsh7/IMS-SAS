@@ -1,15 +1,8 @@
+import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { getInternalOrigin } from "@/lib/internal-origin";
-
-export type SessionUser = {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  branchIds: string[];
-  isActive?: boolean;
-};
+import type { SessionUser } from "./session-user";
 
 /** One session resolution per request (RSC + layout). */
 export const getSession = cache(async (): Promise<SessionUser | null> => {

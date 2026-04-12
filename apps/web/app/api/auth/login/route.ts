@@ -10,15 +10,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
   }
 
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const password = typeof body.password === "string" ? body.password : "";
+  if (!email || !password) {
+    return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
+  }
+
   const api = getApiBaseUrl();
-  const upstream = await fetch(`${api}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: body.email,
-      password: body.password
-    })
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${api}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        message:
+          `Cannot reach the API at ${api}. Start the API (e.g. npm run dev from the repo root) or set IMS_API_URL / NEXT_PUBLIC_IMS_API_URL.`
+      },
+      { status: 503 }
+    );
+  }
 
   const data = (await upstream.json().catch(() => ({}))) as {
     message?: string;
@@ -30,7 +44,11 @@ export async function POST(request: Request) {
   if (!upstream.ok) {
     const status =
       upstream.status === 401 ? 401 : upstream.status === 400 ? 400 : upstream.status >= 500 ? 502 : 400;
-    return NextResponse.json({ message: data.message ?? "Login failed" }, { status });
+    let message = data.message ?? "Login failed";
+    if (upstream.status === 401 && process.env.NODE_ENV === "development") {
+      message = `${message} For a fresh DB, run: npm run seed:admin -w @ims/db — then admin@ims.local / Admin@1234.`;
+    }
+    return NextResponse.json({ message }, { status });
   }
 
   if (!data.accessToken || !data.refreshToken) {

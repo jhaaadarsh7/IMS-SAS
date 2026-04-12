@@ -10,7 +10,7 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<string>("VIEWER");
+  const [role, setRole] = useState<string>("STAFF");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 

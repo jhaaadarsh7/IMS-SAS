@@ -22,7 +22,8 @@ function LoginFields({ showRegister }: { showRegister: boolean }) {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        credentials: "same-origin",
       });
       const data = (await res.json().catch(() => ({}))) as { message?: string };
       if (!res.ok) {

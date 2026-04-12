@@ -8,6 +8,7 @@ import { BranchProductRequestService } from "../services/branch-product-request.
 
 const createSchema = z.object({
   branchId: z.string().min(1),
+  warehouseId: z.string().optional().transform(v => v && v.trim() ? v : undefined),
   productId: z.string().min(1),
   requestedQty: z.coerce.number().int().positive(),
   notes: z.string().trim().min(1).optional()
@@ -38,12 +39,18 @@ export async function branchProductRequestRoutes(app: FastifyInstance) {
       try {
         const body = createSchema.parse(request.body);
         const result = await service.create({
-          ...body,
+          branchId: body.branchId,
+          warehouseId: body.warehouseId,
+          productId: body.productId,
+          requestedQty: body.requestedQty,
+          notes: body.notes,
           createdByUserId: request.user!.userId
         });
         return reply.status(201).send(result);
       } catch (error) {
-        return reply.status(400).send({ message: error instanceof Error ? error.message : "Failed to create request" });
+        const message = error instanceof Error ? error.message : "Failed to create request";
+        console.error("[POST /branch-requests] Error:", message, error);
+        return reply.status(400).send({ message });
       }
     }
   );
@@ -54,16 +61,19 @@ export async function branchProductRequestRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         const query = listSchema.parse(request.query);
-        const allowedBranchIds = request.user?.role === Role.SALES_USER ? request.user.branchIds : undefined;
+        const isStaff = request.user?.role === Role.STAFF;
+        const allowedBranchIds = isStaff ? request.user.branchIds : undefined;
 
         const result = await service.list({
           ...query,
-          branchId: request.user?.role === Role.SALES_USER ? query.branchId ?? request.user.branchIds?.[0] : query.branchId,
+          branchId: isStaff ? query.branchId ?? request.user.branchIds?.[0] : query.branchId,
           allowedBranchIds
         });
         return reply.status(200).send(result);
       } catch (error) {
-        return reply.status(400).send({ message: error instanceof Error ? error.message : "Invalid query" });
+        const message = error instanceof Error ? error.message : "Invalid query";
+        console.error("[GET /branch-requests] Error:", message, error);
+        return reply.status(400).send({ message });
       }
     }
   );

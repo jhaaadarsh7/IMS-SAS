@@ -13,6 +13,7 @@ model User {
   name          String
   role          UserRole
   branchIds     String[]  @default([])
+  warehouseIds  String[]  @default([])
   isActive      Boolean   @default(true)
   refreshToken  String?   @db.Text
   createdRequests BranchProductRequest[] @relation("CreatedProductRequests")
@@ -23,12 +24,8 @@ model User {
 }
 
 enum UserRole {
-  SUPER_ADMIN
-  HQ_MANAGER
-  BRANCH_MANAGER
-  INVENTORY_CLERK
-  SALES_USER
-  VIEWER
+  ADMIN
+  STAFF
 }
 
 model Warehouse {
@@ -38,12 +35,16 @@ model Warehouse {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   stockLedger StockLedger[]
+  branchProductRequests BranchProductRequest[]
+  branches    Branch[]
 }
 
 model Branch {
   id          String      @id @default(cuid())
   code        String      @unique
   name        String
+  warehouseId String?
+  warehouse   Warehouse?  @relation(fields: [warehouseId], references: [id])
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   stockLedger StockLedger[]
@@ -70,6 +71,8 @@ model BranchProductRequest {
   id              String               @id @default(cuid())
   branchId        String
   branch          Branch               @relation(fields: [branchId], references: [id])
+  warehouseId     String?
+  warehouse       Warehouse?           @relation(fields: [warehouseId], references: [id])
   productId       String
   product         Product              @relation(fields: [productId], references: [id])
   requestedQty    Int
@@ -83,6 +86,7 @@ model BranchProductRequest {
   @@index([branchId, status, createdAt])
   @@index([productId, status, createdAt])
   @@index([createdByUserId, createdAt])
+  @@index([warehouseId])
 }
 
 model StockLedger {
