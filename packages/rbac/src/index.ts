@@ -31,10 +31,14 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   [Role.ADMIN]: Object.values(Permission),
   [Role.STAFF]: [
     Permission.PRODUCT_READ,
+    Permission.PRODUCT_WRITE,
     Permission.SALE_CREATE,
     Permission.STOCK_ADJUST,
     Permission.REQUEST_CREATE,
     Permission.REQUEST_READ,
+    Permission.REQUEST_UPDATE,
+    Permission.FORECAST_RUN,
+    Permission.DASHBOARD_VIEW,
     Permission.LEDGER_VIEW
   ]
 };

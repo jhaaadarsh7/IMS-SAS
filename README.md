@@ -210,3 +210,17 @@ flowchart TD
 - Every inventory change is traceable with timestamp and reference.
 - Transfer always impacts two locations.
 - Permissions control what each role can perform and view.
+
+
+You can use the following credentials to explore the system. All accounts use the same default password.
+
+**Default Password**: `Admin@1234`
+
+| Role | Branch | Email |
+| --- | --- | --- |
+| **Admin** | Global | `admin@ims.local` |
+| **Staff** | North Branch | `staff.no@ims.local` |
+| **Staff** | South Branch | `staff.so@ims.local` |
+| **Staff** | East Branch | `staff.ea@ims.local` |
+| **Staff** | West Branch | `staff.we@ims.local` |
+| **Staff** | Central Hub | `staff.hb@ims.local` |

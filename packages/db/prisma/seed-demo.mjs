@@ -90,6 +90,40 @@ async function main() {
   }
   console.log(`✅ Seeded 6 Users (1 Admin, 5 Staff)`);
 
+  // 5. Seed Historical Sales (for ABC and Forecasting)
+  console.log("📈 Generating 90 days of historical sales data...");
+  const salesEntries = [];
+  const now = new Date();
+
+  for (const branch of branches) {
+    for (const product of products) {
+      // Simulate real demand patterns: some products sell more than others
+      // PROD-001 (Laptop) and PROD-006 (Phone) are high volume "A" items
+      const isHighVolume = product.sku === "PROD-001" || product.sku === "PROD-006";
+      const numSales = isHighVolume ? 40 : 12;
+
+      for (let i = 0; i < numSales; i++) {
+        // Random date in last 90 days
+        const daysAgo = Math.floor(Math.random() * 90);
+        const saleDate = new Date(now);
+        saleDate.setDate(now.getDate() - daysAgo);
+
+        salesEntries.push({
+          productId: product.id,
+          branchId: branch.id,
+          eventType: "SALE_OUT_BRANCH",
+          quantityDelta: -(Math.floor(Math.random() * 5) + 1), // 1 to 5 units
+          referenceNo: `SALE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+          createdAt: saleDate
+        });
+      }
+    }
+  }
+
+  // Batch insert for performance
+  await prisma.stockLedger.createMany({ data: salesEntries });
+  console.log(`✅ Seeded ${salesEntries.length} historical sales entries across 5 branches`);
+
   console.log("\n🚀 Demo Seed Complete!");
   console.log(`🔑 Default password for all: ${DEFAULT_PASSWORD}`);
   console.log("\nUsers:");

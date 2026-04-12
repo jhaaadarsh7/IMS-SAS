@@ -2,9 +2,16 @@ import { can, Permission, permissionsForRole, Role, type UserContext } from "@im
 import type { SessionUser } from "@/lib/auth/session-user";
 
 function parseRole(role: string): Role {
+  const r = role.toUpperCase();
+  // Map legacy names to new standard
+  if (r === "ADMIN" || r === "SUPER_ADMIN") return Role.ADMIN;
+  if (r === "STAFF" || r === "SALES_USER" || r === "BRANCH_MANAGER") return Role.STAFF;
+  
+  // Final check against enum values
   const values = Object.values(Role) as string[];
-  if (values.includes(role)) return role as Role;
-  return Role.STAFF;
+  if (values.includes(r)) return r as Role;
+  
+  return Role.STAFF; // Default safety fallback
 }
 
 export function sessionToContext(user: SessionUser): UserContext {

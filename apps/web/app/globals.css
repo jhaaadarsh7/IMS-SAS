@@ -170,6 +170,11 @@ select.input-dark {
   padding-right: 36px;
 }
 
+.input-dark option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 /* ── Buttons ── */
 .btn {
   display: inline-flex;

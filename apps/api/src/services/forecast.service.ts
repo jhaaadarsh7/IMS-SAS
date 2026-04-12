@@ -71,10 +71,12 @@ function toForecastDto(forecast: {
   forecastQty: Prisma.Decimal;
   confidence: Prisma.Decimal | null;
   createdAt: Date;
+  product?: { name: string };
 }) {
   return {
     id: forecast.id,
     productId: forecast.productId,
+    product: forecast.product,
     branchId: forecast.branchId,
     model: forecast.model,
     horizonDays: forecast.horizonDays,
@@ -112,7 +114,8 @@ export class ForecastService {
         where,
         orderBy: { createdAt: "desc" },
         skip: (input.page - 1) * input.limit,
-        take: input.limit
+        take: input.limit,
+        include: { product: { select: { name: true } } }
       }),
       prisma.forecast.count({ where })
     ]);
@@ -242,7 +245,7 @@ export class ForecastService {
         model: "SES",
         horizonDays: input.horizonDays,
         forecastQty: new Prisma.Decimal(forecastQty.toFixed(2)),
-        confidence: null
+        confidence: new Prisma.Decimal(sesResult.confidence.toFixed(4))
       }
     });
 

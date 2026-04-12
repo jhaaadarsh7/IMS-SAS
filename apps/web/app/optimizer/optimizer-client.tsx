@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { api, type Product, type PaginatedResponse } from "@/lib/api-client";
+
+type ABCData = {
+  productId: string;
+  class: string;
+};
 
 type OptimizeResult = {
   strategy: "dp" | "greedy";
@@ -18,33 +24,72 @@ type OptimizeResult = {
   }>;
 };
 
-const sampleProducts = [
-  { id: "p1", name: "Premium Cable", cost: 120, abcClass: "A", marginPerUnit: 40, maxQty: 10 },
-  { id: "p2", name: "Adapter", cost: 80, abcClass: "B", marginPerUnit: 22, maxQty: 20 },
-  { id: "p3", name: "Mouse", cost: 60, abcClass: "C", marginPerUnit: 14, maxQty: 15 },
-];
-
 export function OptimizerClient() {
-  const [budget, setBudget] = useState(1000);
-  const [strategy, setStrategy] = useState<"dp" | "greedy">("dp");
+  const [budget, setBudget] = useState(500000);
+  const [globalMaxQty, setGlobalMaxQty] = useState(500);
+  const [strategy] = useState<"dp" | "greedy">("dp"); // Default to DP, Greedy still in codebase but not in UI
   const [result, setResult] = useState<OptimizeResult | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [abcData, setAbcData] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [pRes, abcRes] = await Promise.all([
+          api.get<PaginatedResponse<Product>>("products", { limit: "1000" }),
+          api.get<PaginatedResponse<ABCData>>("abc", { limit: "1000" })
+        ]);
+        setProducts(pRes.items);
+        
+        const mapping: Record<string, string> = {};
+        abcRes.items.forEach(item => {
+          mapping[item.productId] = item.class;
+        });
+        setAbcData(mapping);
+      } catch (err) {
+        console.error("Failed to load optimizer data", err);
+      }
+    }
+    loadData();
+  }, []);
+
+  const candidates = useMemo(() => {
+    return products.map(p => {
+      const unitCost = Number(p.unitCost);
+      const sellingPrice = Number(p.sellingPrice);
+      return {
+        id: p.id,
+        name: p.name,
+        cost: unitCost,
+        abcClass: abcData[p.id] || "C",
+        marginPerUnit: Math.max(0, sellingPrice - unitCost),
+        maxQty: globalMaxQty
+      };
+    });
+  }, [products, abcData, globalMaxQty]);
+
   const payload = useMemo(
-    () => ({ budget, strategy, products: sampleProducts }),
-    [budget, strategy]
+    () => ({ budget, strategy, products: candidates }),
+    [budget, strategy, candidates]
   );
 
   async function runOptimizer() {
     setLoading(true);
-    const res = await fetch("/api/optimizer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = (await res.json()) as OptimizeResult | { message?: string };
-    setResult("items" in data && Array.isArray(data.items) ? data : null);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/optimizer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json()) as OptimizeResult | { message?: string };
+      setResult("items" in data && Array.isArray(data.items) ? data : null);
+    } catch (error) {
+       console.error("Optimization failed", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -65,25 +110,24 @@ export function OptimizerClient() {
               value={budget}
               min={1}
               onChange={(e) => setBudget(Number(e.target.value))}
-              className="input-dark w-36"
+              className="input-dark w-40"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Strategy</label>
-            <select
-              value={strategy}
-              onChange={(e) => setStrategy(e.target.value as "dp" | "greedy")}
-              className="input-dark w-44"
-            >
-              <option value="dp">Dynamic Programming (exact)</option>
-              <option value="greedy">Greedy (fast)</option>
-            </select>
+            <label className="block text-xs font-medium text-slate-400 mb-1">Safety Limit (Max units/item)</label>
+            <input
+              type="number"
+              value={globalMaxQty}
+              min={1}
+              onChange={(e) => setGlobalMaxQty(Number(e.target.value))}
+              className="input-dark w-40"
+            />
           </div>
           <button
             type="button"
             onClick={runOptimizer}
             disabled={loading}
-            className="btn btn-primary"
+            className="btn btn-primary h-11 px-8"
           >
             {loading ? (
               <><span className="spinner" style={{ width: 16, height: 16 }} /> Optimizing...</>
@@ -94,24 +138,27 @@ export function OptimizerClient() {
         </div>
       </div>
 
-      {/* Sample Products */}
+      {/* Real Inventory Candidates */}
       <div className="glass-card p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Product Candidates</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Inventory Candidates</h2>
         <div className="overflow-x-auto">
           <table className="table-dark">
             <thead>
-              <tr><th>Product</th><th>Unit Cost</th><th>ABC Class</th><th>Margin/Unit</th><th>Max Qty</th></tr>
+              <tr><th>Product</th><th>Unit Cost</th><th>ABC Class</th><th>Est. Margin</th><th>Limit</th></tr>
             </thead>
             <tbody>
-              {sampleProducts.map((p) => (
+              {candidates.map((p) => (
                 <tr key={p.id}>
                   <td className="text-slate-200 font-medium">{p.name}</td>
                   <td>₹{p.cost}</td>
                   <td><span className={`badge ${p.abcClass === "A" ? "badge-emerald" : p.abcClass === "B" ? "badge-amber" : "badge-slate"}`}>{p.abcClass}</span></td>
-                  <td>₹{p.marginPerUnit}</td>
+                  <td className="text-indigo-300">₹{p.marginPerUnit}</td>
                   <td>{p.maxQty}</td>
                 </tr>
               ))}
+              {candidates.length === 0 && (
+                <tr><td colSpan={5} className="text-center py-4 text-slate-500 italic">No products found in inventory...</td></tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -20,7 +20,7 @@ const listQuerySchema = z.object({
   branchId: z.string().optional(),
   class: z.nativeEnum(ABCRank).optional(),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20)
+  limit: z.coerce.number().int().min(1).max(1000).default(20)
 });
 
 export async function abcRoutes(app: FastifyInstance) {

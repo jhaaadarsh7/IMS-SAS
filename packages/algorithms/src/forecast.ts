@@ -8,6 +8,7 @@ export interface SESResult {
   fitted: number[];
   next: number[];
   lastLevel: number;
+  confidence: number;
 }
 
 export function simpleExponentialSmoothing(input: SESInput): SESResult {
@@ -29,9 +30,19 @@ export function simpleExponentialSmoothing(input: SESInput): SESResult {
     fitted.push(level);
   }
 
+  let totalError = 0;
+  let totalActual = 0;
+  for (let i = 0; i < input.history.length; i++) {
+    totalError += Math.abs(input.history[i] - fitted[i]);
+    totalActual += input.history[i];
+  }
+
+  const confidence = totalActual > 0 ? Math.max(0, 1 - totalError / totalActual) : 0;
+
   return {
     fitted,
     next: Array(periods).fill(level),
-    lastLevel: level
+    lastLevel: level,
+    confidence
   };
 }
