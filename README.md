@@ -211,16 +211,27 @@ flowchart TD
 - Transfer always impacts two locations.
 - Permissions control what each role can perform and view.
 
-
 You can use the following credentials to explore the system. All accounts use the same default password.
 
 **Default Password**: `Admin@1234`
 
-| Role | Branch | Email |
-| --- | --- | --- |
-| **Admin** | Global | `admin@ims.local` |
-| **Staff** | North Branch | `staff.no@ims.local` |
-| **Staff** | South Branch | `staff.so@ims.local` |
-| **Staff** | East Branch | `staff.ea@ims.local` |
-| **Staff** | West Branch | `staff.we@ims.local` |
-| **Staff** | Central Hub | `staff.hb@ims.local` |
+### 🏢 Global & System Roles
+| Role | Email | Scope |
+| :--- | :--- | :--- |
+| **Super Admin** | `superadmin@ims.local` | Full System Access |
+| **System Admin** | `admin@ims.local` | Management Access |
+
+### 📦 Warehouse Managers (2 Locations)
+| Location | Role | Email |
+| :--- | :--- | :--- |
+| **Central Warehouse** | Warehouse Manager | `wm.ct@ims.local` |
+| **Regional Warehouse** | Warehouse Manager | `wm.rg@ims.local` |
+
+### 🏪 Branch Management & Staff (5 Locations)
+| Location | Branch Manager Email | Sales Staff Email |
+| :--- | :--- | :--- |
+| **North Branch** | `bm.no@ims.local` | `staff.no@ims.local` |
+| **South Branch** | `bm.so@ims.local` | `staff.so@ims.local` |
+| **East Branch** | `bm.ea@ims.local` | `staff.ea@ims.local` |
+| **West Branch** | `bm.we@ims.local` | `staff.we@ims.local` |
+| **Central Hub** | `bm.hb@ims.local` | `staff.hb@ims.local` |

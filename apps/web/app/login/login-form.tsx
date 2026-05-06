@@ -41,8 +41,8 @@ function LoginFields({ showRegister }: { showRegister: boolean }) {
     <>
       <form onSubmit={onSubmit} className="space-y-5">
         {error && (
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300" role="alert">
-            {error}
+          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 font-medium" role="alert">
+            {error.includes("For a fresh DB") ? "Invalid credentials" : error}
           </div>
         )}
         <div>

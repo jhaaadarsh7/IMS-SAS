@@ -121,6 +121,7 @@ export default function ForecastsPageClient({
 
   // Last ML result
   const [lastResult, setLastResult] = useState<MLForecastResponse | null>(null);
+  const [computeError, setComputeError] = useState<string | null>(null);
   const [showAllDays, setShowAllDays] = useState(false);
 
   // ── Data loading ───────────────────────────────────────────────────────────
@@ -171,6 +172,7 @@ export default function ForecastsPageClient({
 
     setComputing(true);
     setLastResult(null);
+    setComputeError(null);
     try {
       const body: Record<string, unknown> = {
         productId: computeProduct,
@@ -187,7 +189,9 @@ export default function ForecastsPageClient({
       toast("ML forecast generated successfully", "success");
       load();
     } catch (err) {
-      toast((err as Error).message || "Failed to generate forecast", "error");
+      const msg = (err as Error).message || "Failed to generate forecast";
+      setComputeError(msg);
+      toast(msg, "error");
     } finally {
       setComputing(false);
     }
@@ -332,6 +336,43 @@ export default function ForecastsPageClient({
           </button>
         </div>
       </div>
+
+      {/* ── Error Alert ─────────────────────────────────────────────────── */}
+      {computeError && (
+        <div className="glass-card border border-rose-500/30 bg-rose-500/5 p-5 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">⚠️</span>
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold text-rose-300">
+                Forecasting Error: {computeError}
+              </h3>
+              
+              <div className="text-xs text-slate-400 space-y-2 leading-relaxed">
+                {computeError.toLowerCase().includes("insufficient") || computeError.toLowerCase().includes("record some sales") ? (
+                  <>
+                    <p>
+                      The machine learning model requires historical data to identify patterns. 
+                      Currently, there is not enough sales history for this product.
+                    </p>
+                    <p className="font-semibold text-slate-300">
+                      ✅ How to fix:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 ml-1">
+                      <li>Ensure at least 14 days of sales have been recorded in the Stock Ledger.</li>
+                      <li>For full feature accuracy (lags/trends), 30+ days of history is recommended.</li>
+                      <li>Try selecting a different product with more transaction history.</li>
+                    </ul>
+                  </>
+                ) : computeError.toLowerCase().includes("not found") ? (
+                  <p>The selected product or branch could not be found in the database. Please refresh the page and try again.</p>
+                ) : (
+                  <p>An unexpected error occurred while training the ML model. Please check the system logs or try again later.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── ML Forecast Results ─────────────────────────────────────────── */}
       {lastResult && (
