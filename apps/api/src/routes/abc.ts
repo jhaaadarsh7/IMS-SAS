@@ -28,7 +28,7 @@ export async function abcRoutes(app: FastifyInstance) {
 
   app.post(
     "/abc/run",
-    { preHandler: [authenticateRequest, requirePermission(Permission.DASHBOARD_VIEW, { branchIdFrom: "body" })] },
+    { preHandler: [authenticateRequest, requirePermission(Permission.FORECAST_RUN, { branchIdFrom: "body" })] },
     async (request, reply) => {
       try {
         const body = runAbcSchema.parse(request.body);
@@ -42,7 +42,7 @@ export async function abcRoutes(app: FastifyInstance) {
 
   app.get(
     "/abc",
-    { preHandler: [authenticateRequest, requirePermission(Permission.DASHBOARD_VIEW, { branchIdFrom: "query" })] },
+    { preHandler: [authenticateRequest, requirePermission(Permission.FORECAST_RUN, { branchIdFrom: "query" })] },
     async (request, reply) => {
       try {
         const query = listQuerySchema.parse(request.query);

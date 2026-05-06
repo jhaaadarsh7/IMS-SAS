@@ -1,6 +1,9 @@
 export enum Role {
+  SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
-  STAFF = "STAFF"
+  WAREHOUSE_MANAGER = "WAREHOUSE_MANAGER",
+  BRANCH_MANAGER = "BRANCH_MANAGER",
+  SALES_STAFF = "SALES_STAFF"
 }
 
 export enum Permission {
@@ -25,32 +28,53 @@ export interface UserContext {
   id: string;
   role: Role;
   branchIds?: string[];
+  warehouseIds?: string[];
 }
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  [Role.SUPER_ADMIN]: Object.values(Permission),
   [Role.ADMIN]: Object.values(Permission),
-  [Role.STAFF]: [
+  [Role.WAREHOUSE_MANAGER]: [
     Permission.PRODUCT_READ,
-    Permission.PRODUCT_WRITE,
-    Permission.SALE_CREATE,
+    Permission.PURCHASE_CREATE,
+    Permission.TRANSFER_CREATE,
     Permission.STOCK_ADJUST,
+    Permission.REQUEST_READ,
+    Permission.REQUEST_UPDATE,
+    Permission.DASHBOARD_VIEW,
+    Permission.LEDGER_VIEW
+  ],
+  [Role.BRANCH_MANAGER]: [
+    Permission.PRODUCT_READ,
+    Permission.SALE_CREATE,
+    Permission.TRANSFER_CREATE,
     Permission.REQUEST_CREATE,
     Permission.REQUEST_READ,
     Permission.REQUEST_UPDATE,
     Permission.FORECAST_RUN,
     Permission.DASHBOARD_VIEW,
     Permission.LEDGER_VIEW
+  ],
+  [Role.SALES_STAFF]: [
+    Permission.PRODUCT_READ,
+    Permission.SALE_CREATE,
+    Permission.REQUEST_CREATE,
+    Permission.REQUEST_READ,
+    Permission.DASHBOARD_VIEW
   ]
 };
 
-export function can(user: UserContext, permission: Permission, branchId?: string): boolean {
+export function can(user: UserContext, permission: Permission, scope?: { branchId?: string; warehouseId?: string }): boolean {
   const allowedPermissions = ROLE_PERMISSIONS[user.role] ?? [];
   if (!allowedPermissions.includes(permission)) return false;
 
-  if (!branchId) return true;
-  if (user.role === Role.ADMIN) return true;
+  if (!scope || (!scope.branchId && !scope.warehouseId)) return true;
+  if (user.role === Role.SUPER_ADMIN || user.role === Role.ADMIN) return true;
 
-  return (user.branchIds ?? []).includes(branchId);
+  if (scope.branchId && (user.branchIds ?? []).includes(scope.branchId)) return true;
+  if (scope.warehouseId && (user.warehouseIds ?? []).includes(scope.warehouseId)) return true;
+
+  return false;
 }
 
 /** All permissions granted to a role (for UI hints; enforce on the API). */

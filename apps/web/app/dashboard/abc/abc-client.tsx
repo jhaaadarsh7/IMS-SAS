@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/toast";
 
 const classBadge: Record<string, string> = { A: "badge-emerald", B: "badge-amber", C: "badge-slate" };
 
-export default function ABCPageClient() {
+export default function ABCPageClient({ allowedBranchIds }: { allowedBranchIds?: string[] }) {
   const { toast } = useToast();
   const [data, setData] = useState<PaginatedResponse<ABCEntry> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,8 +36,14 @@ export default function ABCPageClient() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    api.get<PaginatedResponse<Branch>>("branches", { limit: "100" }).then((d) => setBranches(d.items)).catch(() => {});
-  }, []);
+    api.get<PaginatedResponse<Branch>>("branches", { limit: "100" }).then((d) => {
+      if (allowedBranchIds) {
+        setBranches(d.items.filter(b => allowedBranchIds.includes(b.id)));
+      } else {
+        setBranches(d.items);
+      }
+    }).catch(() => {});
+  }, [allowedBranchIds]);
 
   async function runAnalysis() {
     setRunning(true);

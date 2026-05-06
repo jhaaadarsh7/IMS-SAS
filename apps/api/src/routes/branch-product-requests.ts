@@ -61,12 +61,13 @@ export async function branchProductRequestRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         const query = listSchema.parse(request.query);
-        const isStaff = request.user?.role === Role.STAFF;
-        const allowedBranchIds = isStaff ? request.user.branchIds : undefined;
+        const role = request.user?.role as Role;
+        const isBranchUser = role === Role.BRANCH_MANAGER || role === Role.SALES_STAFF;
+        const allowedBranchIds = isBranchUser ? request.user?.branchIds : undefined;
 
         const result = await service.list({
           ...query,
-          branchId: isStaff ? query.branchId ?? request.user.branchIds?.[0] : query.branchId,
+          branchId: isBranchUser ? query.branchId ?? request.user?.branchIds?.[0] : query.branchId,
           allowedBranchIds
         });
         return reply.status(200).send(result);
@@ -87,10 +88,11 @@ export async function branchProductRequestRoutes(app: FastifyInstance) {
         {
           id: request.user!.userId,
           role: request.user!.role as Role,
-          branchIds: request.user!.branchIds
+          branchIds: request.user!.branchIds,
+          warehouseIds: request.user!.warehouseIds
         },
         Permission.REQUEST_READ,
-        result.branchId
+        { branchId: result.branchId, warehouseId: result.warehouseId ?? undefined }
       );
 
       if (!allowed) {

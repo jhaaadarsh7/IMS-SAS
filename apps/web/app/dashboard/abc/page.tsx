@@ -10,8 +10,9 @@ export default async function ABCPage() {
   if (!user) {
     redirect("/login?next=/dashboard/abc");
   }
-  if (!sessionCan(user, Permission.DASHBOARD_VIEW)) {
+  if (!sessionCan(user, Permission.FORECAST_RUN)) {
     return <AccessDenied reason="ABC analysis is available to administrators only." />;
   }
-  return <ABCPageClient />;
+  const isAdmin = user.role === "SUPER_ADMIN" || user.role === "ADMIN";
+  return <ABCPageClient allowedBranchIds={isAdmin ? undefined : user.branchIds} />;
 }

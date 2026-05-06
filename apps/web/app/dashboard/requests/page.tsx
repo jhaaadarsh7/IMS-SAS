@@ -10,12 +10,12 @@ export default async function RequestsPage() {
     redirect("/login?next=/dashboard/requests");
   }
 
-  const isSales = user.role === Role.STAFF;
+  const isBranchUser = user.role === Role.BRANCH_MANAGER || user.role === Role.SALES_STAFF;
 
   return (
     <RequestsPageClient
       canUpdateStatus={sessionCan(user, Permission.REQUEST_UPDATE)}
-      allowedBranchIds={isSales ? user.branchIds : undefined}
+      allowedBranchIds={isBranchUser ? user.branchIds : undefined}
     />
   );
 }

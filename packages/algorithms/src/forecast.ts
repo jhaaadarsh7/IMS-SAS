@@ -1,9 +1,17 @@
+/**
+ * @deprecated Simple Exponential Smoothing has been replaced by ML-based
+ * Gradient Boosting-style forecasting. See `ml-forecast.ts`.
+ * This module is kept for reference only and is NOT called by any active route.
+ */
+
+/** @deprecated */
 export interface SESInput {
   history: number[];
   alpha?: number;
   periods?: number;
 }
 
+/** @deprecated */
 export interface SESResult {
   fitted: number[];
   next: number[];
@@ -11,6 +19,10 @@ export interface SESResult {
   confidence: number;
 }
 
+/**
+ * @deprecated Replaced by `trainPipeline` + `recursiveForecast` in `ml-forecast.ts`.
+ * Do NOT call this from any active Fastify route or service.
+ */
 export function simpleExponentialSmoothing(input: SESInput): SESResult {
   const alpha = input.alpha ?? 0.3;
   const periods = input.periods ?? 1;
@@ -18,7 +30,7 @@ export function simpleExponentialSmoothing(input: SESInput): SESResult {
     throw new Error("alpha must be between 0 and 1");
   }
   if (input.history.length === 0) {
-    return { fitted: [], next: Array(periods).fill(0), lastLevel: 0 };
+    return { fitted: [], next: Array(periods).fill(0), lastLevel: 0, confidence: 0 };
   }
 
   const fitted: number[] = [];

@@ -25,7 +25,7 @@ export default function UsersPageClient() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role>(Role.STAFF);
+  const [role, setRole] = useState<Role>(Role.SALES_STAFF);
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
 
@@ -53,19 +53,20 @@ export default function UsersPageClient() {
     e.preventDefault();
     setPending(true);
     try {
+      const isGlobal = role === Role.ADMIN || role === Role.SUPER_ADMIN;
       await api.post("users", {
         name,
         email,
         password,
         role,
-        branchIds: role === Role.STAFF ? selectedBranches : []
+        branchIds: !isGlobal ? selectedBranches : []
       });
       toast("User created successfully");
       setShowForm(false);
       setName("");
       setEmail("");
       setPassword("");
-      setRole(Role.STAFF);
+      setRole(Role.SALES_STAFF);
       setSelectedBranches([]);
       loadData();
     } catch (err) {
@@ -129,12 +130,15 @@ export default function UsersPageClient() {
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">System Role</label>
                 <select value={role} onChange={(e) => setRole(e.target.value as Role)} className="input-dark">
+                  <option value={Role.SUPER_ADMIN}>Super Admin</option>
                   <option value={Role.ADMIN}>Admin</option>
-                  <option value={Role.STAFF}>Staff</option>
+                  <option value={Role.WAREHOUSE_MANAGER}>Warehouse Manager</option>
+                  <option value={Role.BRANCH_MANAGER}>Branch Manager</option>
+                  <option value={Role.SALES_STAFF}>Sales Staff</option>
                 </select>
               </div>
 
-              {role === Role.STAFF && (
+              {(role !== Role.ADMIN && role !== Role.SUPER_ADMIN) && (
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">Assigned Branches</label>
                   <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 bg-slate-900/50 rounded-lg border border-white/[0.06]">
@@ -196,10 +200,12 @@ export default function UsersPageClient() {
                   <td className="px-6 py-4">
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        u.role === Role.ADMIN ? "bg-indigo-500/10 text-indigo-400" : "bg-emerald-500/10 text-emerald-400"
+                        (u.role === Role.ADMIN || u.role === Role.SUPER_ADMIN) 
+                          ? "bg-indigo-500/10 text-indigo-400" 
+                          : "bg-emerald-500/10 text-emerald-400"
                       }`}
                     >
-                      {u.role}
+                      {u.role.replace(/_/g, " ")}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -214,7 +220,7 @@ export default function UsersPageClient() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs text-slate-400 italic">
-                      {u.role === Role.ADMIN ? "Global Access" : `${u.branchIds.length} Branch(es)`}
+                      {(u.role === Role.ADMIN || u.role === Role.SUPER_ADMIN) ? "Global Access" : `${u.branchIds.length} Branch(es)`}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right text-xs text-slate-500">

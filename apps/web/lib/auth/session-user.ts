@@ -4,5 +4,6 @@ export type SessionUser = {
   name: string;
   role: string;
   branchIds: string[];
+  warehouseIds: string[];
   isActive?: boolean;
 };

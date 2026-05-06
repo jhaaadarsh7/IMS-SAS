@@ -154,6 +154,10 @@ export interface Forecast {
   horizonDays: number;
   forecastQty: string;
   confidence: string | null;
+  /** ML accuracy metrics — null for legacy SES records */
+  mae: number | null;
+  rmse: number | null;
+  wape: number | null;
   createdAt: string;
   product: { id: string; sku: string; name: string };
 }

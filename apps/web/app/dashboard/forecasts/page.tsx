@@ -10,7 +10,7 @@ export default async function ForecastsPage() {
   if (!user) {
     redirect("/login?next=/dashboard/forecasts");
   }
-  if (!sessionCan(user, Permission.DASHBOARD_VIEW)) {
+  if (!sessionCan(user, Permission.FORECAST_RUN)) {
     return <AccessDenied reason="Demand forecasts are available to administrators only." />;
   }
   return <ForecastsPageClient />;

@@ -94,13 +94,24 @@ export async function inventoryRoutes(app: FastifyInstance) {
     async (request, reply) => {
     try {
       const body = adjustmentSchema.parse(request.body);
-      if (request.user?.role === Role.STAFF) {
+      const role = request.user?.role as Role;
+      const isBranchScoped = role === Role.BRANCH_MANAGER || role === Role.SALES_STAFF;
+      const isWarehouseScoped = role === Role.WAREHOUSE_MANAGER;
+
+      if (isBranchScoped) {
         if (body.warehouseId) {
-          return reply.status(403).send({ message: "Staff users may only post adjustments for their branch" });
+          return reply.status(403).send({ message: "Branch users may only post adjustments for their branch" });
         }
-        if (!body.branchId || !(request.user.branchIds ?? []).includes(body.branchId)) {
+        if (!body.branchId || !(request.user?.branchIds ?? []).includes(body.branchId)) {
           return reply.status(403).send({ message: "Forbidden" });
         }
+      }
+
+      if (isWarehouseScoped) {
+        if (body.branchId) {
+          return reply.status(403).send({ message: "Warehouse managers may only post adjustments for warehouses" });
+        }
+        // Add warehouse ownership check here if needed
       }
       const result = await service.recordAdjustment(body);
       return reply.status(201).send(result);
@@ -128,12 +139,15 @@ export async function inventoryRoutes(app: FastifyInstance) {
     async (request, reply) => {
     try {
       const query = ledgerQuerySchema.parse(request.query);
-      if (request.user?.role === Role.STAFF) {
+      const role = request.user?.role as Role;
+      if (role === Role.BRANCH_MANAGER || role === Role.SALES_STAFF) {
         if (query.warehouseId) {
-          return reply.status(403).send({ message: "Forbidden" });
+          return reply.status(403).send({ message: "Forbidden: Branch users cannot view warehouse ledger" });
         }
-
-        query.branchId = query.branchId ?? request.user.branchIds?.[0];
+        query.branchId = query.branchId ?? request.user?.branchIds?.[0];
+      }
+      if (role === Role.WAREHOUSE_MANAGER && query.branchId) {
+        return reply.status(403).send({ message: "Forbidden: Warehouse managers cannot view branch ledger" });
       }
 
       const result = await service.listLedger(query);
@@ -149,12 +163,15 @@ export async function inventoryRoutes(app: FastifyInstance) {
     async (request, reply) => {
     try {
       const query = stockQuerySchema.parse(request.query);
-      if (request.user?.role === Role.STAFF) {
+      const role = request.user?.role as Role;
+      if (role === Role.BRANCH_MANAGER || role === Role.SALES_STAFF) {
         if (query.warehouseId) {
-          return reply.status(403).send({ message: "Forbidden" });
+          return reply.status(403).send({ message: "Forbidden: Branch users cannot view warehouse stock" });
         }
-
-        query.branchId = query.branchId ?? request.user.branchIds?.[0];
+        query.branchId = query.branchId ?? request.user?.branchIds?.[0];
+      }
+      if (role === Role.WAREHOUSE_MANAGER && query.branchId) {
+        return reply.status(403).send({ message: "Forbidden: Warehouse managers cannot view branch stock" });
       }
 
       const result = await service.stockSnapshot(query);

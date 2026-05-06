@@ -8,6 +8,7 @@ export interface RegisterInput {
   name: string;
   role: UserRole;
   branchIds?: string[];
+  warehouseIds?: string[];
 }
 
 export interface LoginInput {
@@ -24,6 +25,7 @@ export interface AuthResponse {
     name: string;
     role: string;
     branchIds: string[];
+    warehouseIds: string[];
   };
 }
 
@@ -45,7 +47,8 @@ export class AuthService {
         password: hashedPassword,
         name: input.name,
         role: input.role,
-        branchIds: input.branchIds || []
+        branchIds: input.branchIds || [],
+        warehouseIds: input.warehouseIds || []
       }
     });
 
@@ -53,7 +56,8 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role,
-      branchIds: user.branchIds
+      branchIds: user.branchIds,
+      warehouseIds: user.warehouseIds
     };
 
     const accessToken = generateAccessToken(payload);
@@ -72,7 +76,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
-        branchIds: user.branchIds
+        branchIds: user.branchIds,
+        warehouseIds: user.warehouseIds
       }
     };
   }
@@ -96,7 +101,8 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role,
-      branchIds: user.branchIds
+      branchIds: user.branchIds,
+      warehouseIds: user.warehouseIds
     };
 
     const accessToken = generateAccessToken(payload);
@@ -115,7 +121,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
-        branchIds: user.branchIds
+        branchIds: user.branchIds,
+        warehouseIds: user.warehouseIds
       }
     };
   }
@@ -136,7 +143,8 @@ export class AuthService {
         userId: user.id,
         email: user.email,
         role: user.role,
-        branchIds: user.branchIds
+        branchIds: user.branchIds,
+        warehouseIds: user.warehouseIds
       };
 
       const accessToken = generateAccessToken(newPayload);
@@ -148,7 +156,8 @@ export class AuthService {
           email: user.email,
           name: user.name,
           role: user.role,
-          branchIds: user.branchIds
+          branchIds: user.branchIds,
+          warehouseIds: user.warehouseIds
         }
       };
     } catch (error) {
@@ -172,6 +181,7 @@ export class AuthService {
         name: true,
         role: true,
         branchIds: true,
+        warehouseIds: true,
         isActive: true
       }
     });

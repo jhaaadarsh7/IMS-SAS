@@ -57,19 +57,31 @@ async function main() {
   ]);
   console.log(`✅ Seeded 7 Products`);
 
-  // 4. Seed Users (1 Admin + 5 Branch Staff)
+  // 4. Seed Users for 5-Role RBAC System
   const USERS = [
-    {
-      email: "admin@ims.local",
-      name: "Super Admin",
-      role: "ADMIN",
-      branchIds: [],
+    { email: "superadmin@ims.local", name: "Super Admin", role: "SUPER_ADMIN", branchIds: [], warehouseIds: [] },
+    { email: "admin@ims.local", name: "System Admin", role: "ADMIN", branchIds: [], warehouseIds: [] },
+    // Warehouse Managers
+    ...warehouses.map(w => ({
+      email: `wm.${w.code.toLowerCase().replace("wh-", "")}@ims.local`,
+      name: `${w.name} Manager`,
+      role: "WAREHOUSE_MANAGER",
+      branchIds: branches.filter(b => b.warehouseId === w.id).map(b => b.id),
+      warehouseIds: [w.id]
+    })),
+    // Branch Managers
+    ...branches.map(b => ({
+      email: `bm.${b.code.toLowerCase().replace("br-", "")}@ims.local`,
+      name: `${b.name} Manager`,
+      role: "BRANCH_MANAGER",
+      branchIds: [b.id],
       warehouseIds: []
-    },
-    ...branches.map((b, i) => ({
+    })),
+    // Sales Staff
+    ...branches.map(b => ({
       email: `staff.${b.code.toLowerCase().replace("br-", "")}@ims.local`,
       name: `${b.name} Staff`,
-      role: "STAFF",
+      role: "SALES_STAFF",
       branchIds: [b.id],
       warehouseIds: []
     }))
@@ -88,12 +100,26 @@ async function main() {
       }
     });
   }
-  console.log(`✅ Seeded 6 Users (1 Admin, 5 Staff)`);
+  console.log(`✅ Seeded ${USERS.length} Users across 5 Roles`);
 
   // 5. Seed Historical Sales (for ABC and Forecasting)
-  console.log("📈 Generating 90 days of historical sales data...");
-  const salesEntries = [];
+  console.log("📈 Generating initial stock and historical sales data...");
+  const ledgerEntries = [];
   const now = new Date();
+
+  // Inject Initial Stock into every branch
+  for (const branch of branches) {
+    for (const product of products) {
+      ledgerEntries.push({
+        productId: product.id,
+        branchId: branch.id,
+        eventType: "TRANSFER_IN_BRANCH",
+        quantityDelta: 500, // Large positive starting balance
+        referenceNo: `INIT-STOCK-${branch.code}-${product.sku}`,
+        createdAt: new Date(now.getTime() - 91 * 24 * 60 * 60 * 1000) // 91 days ago
+      });
+    }
+  }
 
   for (const branch of branches) {
     for (const product of products) {
@@ -108,7 +134,7 @@ async function main() {
         const saleDate = new Date(now);
         saleDate.setDate(now.getDate() - daysAgo);
 
-        salesEntries.push({
+        ledgerEntries.push({
           productId: product.id,
           branchId: branch.id,
           eventType: "SALE_OUT_BRANCH",
@@ -121,8 +147,8 @@ async function main() {
   }
 
   // Batch insert for performance
-  await prisma.stockLedger.createMany({ data: salesEntries });
-  console.log(`✅ Seeded ${salesEntries.length} historical sales entries across 5 branches`);
+  await prisma.stockLedger.createMany({ data: ledgerEntries });
+  console.log(`✅ Seeded ${ledgerEntries.length} ledger entries (initial stock + sales) across 5 branches`);
 
   console.log("\n🚀 Demo Seed Complete!");
   console.log(`🔑 Default password for all: ${DEFAULT_PASSWORD}`);

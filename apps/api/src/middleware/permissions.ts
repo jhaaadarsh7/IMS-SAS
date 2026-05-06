@@ -4,11 +4,38 @@ import { FastifyReply, FastifyRequest } from "fastify";
 interface RequirePermissionOptions {
   branchIdFrom?: "body" | "params" | "query";
   branchIdKey?: string;
+  warehouseIdFrom?: "body" | "params" | "query";
+  warehouseIdKey?: string;
 }
 
 function resolveBranchId(request: FastifyRequest, options?: RequirePermissionOptions): string | undefined {
   const source = options?.branchIdFrom;
   const key = options?.branchIdKey ?? "branchId";
+
+  if (source === "body") {
+    const body = request.body as Record<string, unknown> | undefined;
+    const value = body?.[key];
+    return typeof value === "string" ? value : undefined;
+  }
+
+  if (source === "params") {
+    const params = request.params as Record<string, unknown> | undefined;
+    const value = params?.[key];
+    return typeof value === "string" ? value : undefined;
+  }
+
+  if (source === "query") {
+    const query = request.query as Record<string, unknown> | undefined;
+    const value = query?.[key];
+    return typeof value === "string" ? value : undefined;
+  }
+
+  return undefined;
+}
+
+function resolveWarehouseId(request: FastifyRequest, options?: RequirePermissionOptions): string | undefined {
+  const source = options?.warehouseIdFrom;
+  const key = options?.warehouseIdKey ?? "warehouseId";
 
   if (source === "body") {
     const body = request.body as Record<string, unknown> | undefined;
@@ -43,15 +70,17 @@ export function requirePermission(permission: Permission, options?: RequirePermi
     }
 
     const branchId = resolveBranchId(request, options);
+    const warehouseId = resolveWarehouseId(request, options);
 
     const allowed = can(
       {
         id: user.userId,
         role: user.role as Role,
-        branchIds: user.branchIds
+        branchIds: user.branchIds,
+        warehouseIds: user.warehouseIds
       },
       permission,
-      branchId
+      { branchId, warehouseId }
     );
 
     if (!allowed) {

@@ -3,27 +3,27 @@ import type { SessionUser } from "@/lib/auth/session-user";
 
 function parseRole(role: string): Role {
   const r = role.toUpperCase();
-  // Map legacy names to new standard
-  if (r === "ADMIN" || r === "SUPER_ADMIN") return Role.ADMIN;
-  if (r === "STAFF" || r === "SALES_USER" || r === "BRANCH_MANAGER") return Role.STAFF;
   
-  // Final check against enum values
   const values = Object.values(Role) as string[];
   if (values.includes(r)) return r as Role;
   
-  return Role.STAFF; // Default safety fallback
+  // Map legacy names to new standard if needed
+  if (r === "STAFF" || r === "SALES_USER") return Role.SALES_STAFF;
+  
+  return Role.SALES_STAFF; // Default safety fallback
 }
 
 export function sessionToContext(user: SessionUser): UserContext {
   return {
     id: user.id,
     role: parseRole(user.role),
-    branchIds: user.branchIds
+    branchIds: user.branchIds,
+    warehouseIds: user.warehouseIds
   };
 }
 
-export function sessionCan(user: SessionUser, permission: Permission, branchId?: string): boolean {
-  return can(sessionToContext(user), permission, branchId);
+export function sessionCan(user: SessionUser, permission: Permission, scope?: { branchId?: string; warehouseId?: string }): boolean {
+  return can(sessionToContext(user), permission, scope);
 }
 
 export function sessionPermissions(user: SessionUser): Permission[] {

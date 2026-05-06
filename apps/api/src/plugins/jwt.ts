@@ -10,6 +10,7 @@ export interface JwtPayload {
   email: string;
   role: string;
   branchIds: string[];
+  warehouseIds: string[];
 }
 
 export function generateAccessToken(payload: JwtPayload): string {

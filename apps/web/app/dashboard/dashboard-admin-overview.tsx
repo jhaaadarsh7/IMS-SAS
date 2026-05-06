@@ -22,7 +22,7 @@ export default function DashboardAdminOverview() {
     api
       .get<DashboardSummary>("dashboard/summary", { lowStockThreshold: "10" })
       .then(setData)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 

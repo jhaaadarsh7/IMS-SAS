@@ -15,7 +15,7 @@ const registerSchema = z.object({
   email: emailField,
   password: z.string().min(6),
   name: z.string().min(2),
-  role: z.enum(["ADMIN", "STAFF"]),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "WAREHOUSE_MANAGER", "BRANCH_MANAGER", "SALES_STAFF"]),
   branchIds: z.array(z.string()).optional()
 });
 

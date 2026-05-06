@@ -38,8 +38,8 @@ const navItems: NavItem[] = [
     icon: "📝",
     anyOf: [Permission.REQUEST_READ, Permission.REQUEST_CREATE]
   },
-  { href: "/dashboard/abc", label: "ABC Analysis", icon: "🔠", anyOf: [Permission.DASHBOARD_VIEW] },
-  { href: "/dashboard/forecasts", label: "Forecasts", icon: "🔮", anyOf: [Permission.DASHBOARD_VIEW] },
+  { href: "/dashboard/abc", label: "ABC Analysis", icon: "🔠", anyOf: [Permission.FORECAST_RUN] },
+  { href: "/dashboard/forecasts", label: "Forecasts", icon: "🔮", anyOf: [Permission.FORECAST_RUN] },
   { href: "/optimizer", label: "Optimizer", icon: "⚡", anyOf: [Permission.OPTIMIZER_RUN] },
   { href: "/dashboard/users", label: "Users", icon: "👥", anyOf: [Permission.USER_READ] }
 ];

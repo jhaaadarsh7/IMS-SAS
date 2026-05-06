@@ -10,7 +10,7 @@ export default async function InventoryPage() {
     redirect("/login?next=/dashboard/inventory");
   }
 
-  const isSales = user.role === Role.STAFF;
+  const isScoped = user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN;
 
   return (
     <InventoryPageClient
@@ -18,8 +18,8 @@ export default async function InventoryPage() {
       showTransfer={sessionCan(user, Permission.TRANSFER_CREATE)}
       showSale={sessionCan(user, Permission.SALE_CREATE)}
       showAdjust={sessionCan(user, Permission.STOCK_ADJUST)}
-      branchOnlyAdjust={isSales}
-      allowedBranchIds={isSales ? user.branchIds : undefined}
+      branchOnlyAdjust={isScoped}
+      allowedBranchIds={isScoped ? user.branchIds : undefined}
     />
   );
 }

@@ -22,12 +22,15 @@ export async function dashboardRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         const query = summaryQuerySchema.parse(request.query);
-        if (request.user?.role === Role.STAFF) {
+        const role = request.user?.role as Role;
+        if (role === Role.BRANCH_MANAGER || role === Role.SALES_STAFF) {
           if (query.warehouseId) {
-            return reply.status(403).send({ message: "Forbidden" });
+            return reply.status(403).send({ message: "Forbidden: Branch users cannot view warehouse analytics" });
           }
-
-          query.branchId = query.branchId ?? request.user.branchIds?.[0];
+          query.branchId = query.branchId ?? request.user?.branchIds?.[0];
+        }
+        if (role === Role.WAREHOUSE_MANAGER && query.branchId) {
+          return reply.status(403).send({ message: "Forbidden: Warehouse managers cannot view branch analytics" });
         }
 
         const result = await service.getSummary(query);

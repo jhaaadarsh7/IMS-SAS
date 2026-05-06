@@ -16,5 +16,8 @@
   "devDependencies": {
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "ml-random-forest": "^2.1.0"
   }
 }

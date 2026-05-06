@@ -24,8 +24,11 @@ model User {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
-  STAFF
+  WAREHOUSE_MANAGER
+  BRANCH_MANAGER
+  SALES_STAFF
 }
 
 model Warehouse {
@@ -119,6 +122,9 @@ model Forecast {
   horizonDays   Int
   forecastQty   Decimal   @db.Decimal(12, 2)
   confidence    Decimal?  @db.Decimal(5, 2)
+  mae           Float?
+  rmse          Float?
+  wape          Float?
   createdAt     DateTime  @default(now())
 
   @@index([productId, branchId, createdAt])
