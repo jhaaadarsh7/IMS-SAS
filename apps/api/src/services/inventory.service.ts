@@ -78,6 +78,15 @@ export class InventoryService {
   }
 
   async recordSale(input: RecordSaleInput) {
+    const currentStock = await this.getCurrentStock({
+      productId: input.productId,
+      branchId: input.branchId,
+    });
+
+    if (currentStock < input.quantity) {
+      throw new Error(`Insufficient stock in branch. Current: ${currentStock}, Requested: ${input.quantity}`);
+    }
+
     const created = await prisma.stockLedger.create({
       data: {
         eventType: LedgerEventType.SALE_OUT_BRANCH,
@@ -126,6 +135,15 @@ export class InventoryService {
 
   async transferWarehouseToBranch(input: WarehouseToBranchTransferInput) {
     return prisma.$transaction(async (tx) => {
+      const currentStock = await this.getCurrentStock({
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+      });
+
+      if (currentStock < input.quantity) {
+        throw new Error(`Insufficient stock in warehouse. Current: ${currentStock}, Requested: ${input.quantity}`);
+      }
+
       const outLedger = await tx.stockLedger.create({
         data: {
           eventType: LedgerEventType.TRANSFER_OUT_WAREHOUSE,
@@ -153,6 +171,25 @@ export class InventoryService {
         inLedger: serializeLedgerRecord(inLedger)
       };
     });
+  }
+
+  private async getCurrentStock(input: {
+    productId: string;
+    warehouseId?: string;
+    branchId?: string;
+  }): Promise<number> {
+    const aggregate = await prisma.stockLedger.aggregate({
+      where: {
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        branchId: input.branchId,
+      },
+      _sum: {
+        quantityDelta: true,
+      },
+    });
+
+    return aggregate._sum.quantityDelta ?? 0;
   }
 
   async listLedger(input: LedgerListInput) {
