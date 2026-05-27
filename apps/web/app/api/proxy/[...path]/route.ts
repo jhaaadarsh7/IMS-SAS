@@ -12,9 +12,7 @@ async function proxyRequest(request: NextRequest, method: string) {
   const targetUrl = new URL(`${api}/${segments}`);
   request.nextUrl.searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
   if (access) {
     headers["Authorization"] = `Bearer ${access}`;
   }
@@ -24,7 +22,10 @@ async function proxyRequest(request: NextRequest, method: string) {
   if (method !== "GET" && method !== "HEAD") {
     try {
       const body = await request.text();
-      if (body) fetchOptions.body = body;
+      if (body) {
+        fetchOptions.body = body;
+        headers["Content-Type"] = "application/json";
+      }
     } catch {
       // no body
     }
