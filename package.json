@@ -15,7 +15,9 @@
     "test": "npm run test --workspaces --if-present",
     "prisma:generate": "npm run prisma:generate -w @ims/db",
     "prisma:migrate": "npm run prisma:migrate -w @ims/db",
-    "seed:admin": "npm run seed:admin -w @ims/db"
+    "seed:admin": "npm run seed:admin -w @ims/db",
+    "seed:2years-sales": "npm run seed:2years-sales -w @ims/db",
+    "cleanup:sales": "npm run cleanup:sales -w @ims/db"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",

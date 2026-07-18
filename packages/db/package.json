@@ -13,6 +13,8 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
     "seed:admin": "node prisma/seed-admin.mjs",
+    "seed:2years-sales": "node prisma/seed-two-years-sales.mjs",
+    "cleanup:sales": "node prisma/cleanup-old-sales.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

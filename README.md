@@ -221,6 +221,8 @@ You can use the following credentials to explore the system. All accounts use th
 | **Super Admin** | `superadmin@ims.local` | Full System Access |
 | **System Admin** | `admin@ims.local` | Management Access |
 
+
+
 ### 📦 Warehouse Managers (2 Locations)
 | Location | Role | Email |
 | :--- | :--- | :--- |

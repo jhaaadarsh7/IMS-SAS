@@ -123,17 +123,17 @@ export function buildDailySeries(
  * fallback values (product mean or 0) so the model can train on them.
  */
 export function generateMLFeatures(series: DailySalesRow[]): MLFeatureRow[] {
-  const n = series.length;
-  const globalMean = n > 0 ? series.reduce((s, r) => s + r.qty, 0) / n : 0;
-
   return series.map((row, i) => {
     const past = series.slice(0, i).map((r) => r.qty);
     const insufficient = i < 30;
 
-    const lag1 = past[i - 1] ?? globalMean;
-    const lag7 = past[i - 7] ?? globalMean;
-    const lag14 = past[i - 14] ?? globalMean;
-    const lag30 = past[i - 30] ?? globalMean;
+    // Use an expanding mean of strictly past data to prevent data leakage
+    const expandingGlobalMean = past.length > 0 ? past.reduce((s, v) => s + v, 0) / past.length : 0;
+
+    const lag1 = past[i - 1] ?? expandingGlobalMean;
+    const lag7 = past[i - 7] ?? expandingGlobalMean;
+    const lag14 = past[i - 14] ?? expandingGlobalMean;
+    const lag30 = past[i - 30] ?? expandingGlobalMean;
 
     const window7 = past.slice(Math.max(0, i - 7));
     const window14 = past.slice(Math.max(0, i - 14));
@@ -147,9 +147,9 @@ export function generateMLFeatures(series: DailySalesRow[]): MLFeatureRow[] {
       lag_7: lag7,
       lag_14: lag14,
       lag_30: lag30,
-      rolling_mean_7: mean(window7) || globalMean,
-      rolling_mean_14: mean(window14) || globalMean,
-      rolling_mean_30: mean(window30) || globalMean,
+      rolling_mean_7: mean(window7) || expandingGlobalMean,
+      rolling_mean_14: mean(window14) || expandingGlobalMean,
+      rolling_mean_30: mean(window30) || expandingGlobalMean,
       rolling_std_7: std(window7),
       rolling_std_30: std(window30),
       day_of_week: d.getUTCDay(),
@@ -348,9 +348,9 @@ export function trainPipeline(
   toDate?: Date
 ): TrainResult {
   const series = buildDailySeries(rawRows, fromDate, toDate);
-  if (series.length < 14) {
+  if (series.length < 32) {
     throw new Error(
-      "Insufficient sales history — need at least 14 days of data to train."
+      "Insufficient sales history — need at least 32 days of data to train."
     );
   }
 
